@@ -47,6 +47,7 @@ public class SaveManager : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log("Save Manager Awake");
         saveFilePath = Application.persistentDataPath + "/save.txt";
         /*if (!Directory.Exists(Application.persistentDataPath))
         {
@@ -77,6 +78,21 @@ public class SaveManager : MonoBehaviour
             // Load current game state (Newly written default sin locations)
             //Setup(); //not done because it gets called in GameManager
             Debug.Log("New save file setup.");
+        }
+    }
+
+    public void DeleteSaveFile()
+    {
+        saveFilePath = Application.persistentDataPath + "/save.txt";
+
+        try
+        {
+            File.Delete(saveFilePath);
+            Debug.Log("Save file deleted.");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error while trying to delete save file: " + e);
         }
     }
 

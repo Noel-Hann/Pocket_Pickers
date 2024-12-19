@@ -82,4 +82,16 @@ public class PauseMenu : MonoBehaviour
         LevelLoader.Instance.LoadLevel(LevelLoader.Instance.menu);
         // SceneManager.LoadScene("MainMenuPlayTest2");
     }
+
+    public void ResetSave()
+    {
+        pauseMenuUI.SetActive(false);
+        Time.timeScale = 1f;
+        IsPaused = false;
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        
+        SaveManager.Instance.DeleteSaveFile();
+        LevelLoader.Instance.LoadLevel(LevelLoader.Instance.map);
+    }
 }
