@@ -1,5 +1,6 @@
 using System;
 using _Scripts.Card;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -123,6 +124,13 @@ namespace _Scripts.Player.State
             TransitionToState(DashingState);
         }
         #endregion
+
+        public void HandleHitByPatroller(bool struckFromRightSide)
+        {
+            TransitionToState(StunnedState); // todo: set length inside coroutine
+            PlayerMovement.Instance.HaltHorizontalMomentum();
+
+        }
         
         #region Wall Sliding
 

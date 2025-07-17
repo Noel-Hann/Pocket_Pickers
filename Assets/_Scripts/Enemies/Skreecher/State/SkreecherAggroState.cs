@@ -13,11 +13,11 @@ namespace _Scripts.Enemies.Skreecher.State
 
             _enemy.gameObject.GetComponent<EnemyAnimator>().chase();
             Debug.Log("Enter Aggro");
-            
+
             _enemy.AlertAllEnemiesInRange();
         }
 
-        public void UpdateState() {}
+        public void UpdateState() { }
 
         public void ExitState()
         {
@@ -27,8 +27,10 @@ namespace _Scripts.Enemies.Skreecher.State
             _enemy.gameObject.GetComponent<EnemyAnimator>().stopChase();
         }
 
-        public void OnCollisionEnter2D(Collision2D col) {}
+        public void OnCollisionEnter2D(Collision2D col) { }
 
-        public void OnCollisionStay2D(Collision2D col) {}
+        public void OnCollisionStay2D(Collision2D col) { }
+
+        public void OnCollisionExit2D(Collision2D col) { }
     }
 }

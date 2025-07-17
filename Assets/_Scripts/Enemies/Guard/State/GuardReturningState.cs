@@ -46,7 +46,9 @@ namespace _Scripts.Enemies.Guard.State
                 _enemy.TransitionToState(_enemy.AggroState);
             }
         }
-        
-        public void OnCollisionStay2D(Collision2D col) {}
+
+        public void OnCollisionStay2D(Collision2D col) { }
+
+        public void OnCollisionExit2D(Collision2D col) { }
     }
 }

@@ -11,6 +11,7 @@ namespace _Scripts.Enemies.Guard.State
         public IEnemyState<GuardStateManager> PatrollingState { get; private set; }
         public IEnemyState<GuardStateManager> DetectingState { get; private set; }
         public IEnemyState<GuardStateManager> AggroState { get; private set; }
+        public IEnemyState<GuardStateManager> AttackingState { get; private set; }
         public IEnemyState<GuardStateManager> SearchingState { get; private set; }
         public IEnemyState<GuardStateManager> ReturningState { get; private set; }
         public IEnemyState<GuardStateManager> InvestigatingState { get; private set; }
@@ -58,6 +59,7 @@ namespace _Scripts.Enemies.Guard.State
             PatrollingState = new GuardPatrollingState(this, transform.position ,Settings.leftPatrolDistance, Settings.rightPatrolDistance);
             DetectingState = new GuardDetectingState();
             AggroState = new GuardAggroState();
+            AttackingState = new GuardAttackingState();
             SearchingState = new GuardSearchingState();
             ReturningState = new GuardReturningState();
             InvestigatingState = new GuardInvestigatingState();
@@ -77,7 +79,7 @@ namespace _Scripts.Enemies.Guard.State
 
             // Update the current state via its UpdateState function
             CurrentState.UpdateState();
-            
+
             // TODO: Eventually the EnemyState ENUM can be removed entirely if we want
             // ENUM State is currently ONLY for debugging in inspector
             if (IsPatrollingState())
@@ -113,6 +115,10 @@ namespace _Scripts.Enemies.Guard.State
             {
                 enumState = GuardState.Disabled;
             }
+            else if (IsAttackingState())
+            {
+                enumState = GuardState.Attacking;
+            }
 
             if (CurrentState == DisabledState || CurrentState == StunnedState)
             {
@@ -131,6 +137,11 @@ namespace _Scripts.Enemies.Guard.State
         private void OnCollisionStay2D(Collision2D col)
         {
             CurrentState.OnCollisionStay2D(col);
+        }
+
+        private void OnCollisionExit2D(Collision2D col)
+        {
+            CurrentState.OnCollisionExit2D(col);
         }
 
         public void TransitionToState(IEnemyState<GuardStateManager> newState)
@@ -180,6 +191,12 @@ namespace _Scripts.Enemies.Guard.State
         public void StopFalling()
         {
             Rigidbody2D.velocity = new Vector2(Rigidbody2D.velocity.x, 0f); 
+        }
+
+        public void DashForward()
+        {
+            var dir = Settings.isFacingRight ? Vector2.right : Vector2.left;
+            Rigidbody2D.velocity = dir * (PlayerVariables.Instance.Stats.DashSpeed * 1);
         }
 
         public bool IsPlayerDetected()
@@ -318,11 +335,16 @@ namespace _Scripts.Enemies.Guard.State
         {
             return CurrentState is GuardDisabledState;
         }
+
+        public bool IsAttackingState()
+        {
+            return CurrentState is GuardAttackingState;
+        }
         
         // Alerted is not an actual state but is used to denote an increase in view radius / distance
         public bool IsAlertedState()
         {
-            return CurrentState is GuardAggroState || CurrentState is GuardSearchingState;
+            return CurrentState is GuardAggroState || CurrentState is GuardSearchingState || CurrentState is GuardAttackingState;
         }
         
         public bool IsInvestigatingState()

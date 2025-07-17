@@ -16,7 +16,7 @@ namespace _Scripts.Enemies.Sniper.State
             _chargeCoroutine = _enemy.StartCoroutine(ChargeShot());
         }
 
-        public void UpdateState() {}
+        public void UpdateState() { }
 
         public void ExitState()
         {
@@ -27,14 +27,14 @@ namespace _Scripts.Enemies.Sniper.State
             }
         }
 
-        public void OnCollisionEnter2D(Collision2D col) {}
+        public void OnCollisionEnter2D(Collision2D col) { }
 
-        public void OnCollisionStay2D(Collision2D col) {}
+        public void OnCollisionStay2D(Collision2D col) { }
 
         private IEnumerator ChargeShot()
         {
             var chargeTime = _enemy.Settings.chargeTime;
-            
+
             var duration = chargeTime * 0.66f;
             _enemy.RayView.ChangeToColor(new Color(1f, 0.5f, 0f), duration); // RGB for orange
             yield return new WaitForSeconds(duration);
@@ -46,14 +46,14 @@ namespace _Scripts.Enemies.Sniper.State
             duration = 0.15f;
             _enemy.RayView.ChangeToColor(Color.white, duration);
             yield return new WaitForSeconds(duration);
-            
+
             FireShot();
         }
 
         private void FireShot()
         {
             EnemySoundManager.Instance.PlaySniperShotClip();
-            
+
             if (_enemy.IsPlayerDetected())
             {
                 // TODO: Eventually this will need to call a full cleanup of the level. For now just restart the scene
@@ -69,11 +69,13 @@ namespace _Scripts.Enemies.Sniper.State
                 foreach (var enemy in _enemy.RayView.EnemiesDetected())
                     enemy.GetComponent<IEnemyStateManagerBase>().KillEnemyWithoutGeneratingSin();
             }
-            
+
             _enemy.RayView.ResetLineRendererColor();
-            
+
             Debug.Log("Switching to reload");
-            _enemy.TransitionToState(_enemy.ReloadingState); 
+            _enemy.TransitionToState(_enemy.ReloadingState);
         }
+
+        public void OnCollisionExit2D(Collision2D col) { }
     }
 }

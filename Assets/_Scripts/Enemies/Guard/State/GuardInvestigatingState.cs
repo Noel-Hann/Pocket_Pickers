@@ -32,9 +32,9 @@ namespace _Scripts.Enemies.Guard.State
                 _enemy.TransitionToState(_enemy.SearchingState);
                 return;
             }
-            
+
             var direction = (_falseTriggerPos - (Vector2)_enemy.transform.position).normalized;
-            _enemy.Move(direction, _enemy.Settings.movementSpeed); 
+            _enemy.Move(direction, _enemy.Settings.movementSpeed);
         }
 
         public void ExitState()
@@ -52,5 +52,7 @@ namespace _Scripts.Enemies.Guard.State
         {
             _enemy.TransitionToState(_enemy.AggroState);
         }
+
+        public void OnCollisionExit2D(Collision2D col) { }
     }
 }

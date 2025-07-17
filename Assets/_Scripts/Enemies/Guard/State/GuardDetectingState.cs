@@ -59,9 +59,11 @@ namespace _Scripts.Enemies.Guard.State
                 _enemy.TransitionToState(_enemy.AggroState);
             }
         }
-        
-        public void OnCollisionStay2D(Collision2D col) {}
-        
+
+        public void OnCollisionExit2D(Collision2D col) { }
+
+        public void OnCollisionStay2D(Collision2D col) { }
+
         /*
         * Called if the enemy is detecting the player and they step out of view.
         * Instead of immediately returning to their patrol state the guard should keep looking in direction

@@ -8,6 +8,7 @@ namespace _Scripts.Enemies.Guard.State
         Patrolling, // Not aware of the player at all (eye closed)
         Detecting, // Sees the player, is not yet focused on them (eye opening)
         Aggro, // Fully aware of the player and their position (eye open)
+        Attacking, // QTE behavior
         Searching, // Aware the player is nearby, unaware of the exact position (eye closing)
         Returning, // Pathfinding back to patrol point
         Investigating, // pathfinding to a false trigger

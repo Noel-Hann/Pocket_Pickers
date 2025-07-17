@@ -13,5 +13,6 @@ namespace _Scripts.Enemies
         void ExitState();
         void OnCollisionEnter2D(Collision2D col);
         void OnCollisionStay2D(Collision2D col);
+        void OnCollisionExit2D(Collision2D col);
     }
 }

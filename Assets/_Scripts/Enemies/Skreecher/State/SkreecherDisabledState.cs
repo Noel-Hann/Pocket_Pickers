@@ -40,8 +40,9 @@ namespace _Scripts.Enemies.Skreecher.State
                 Physics2D.IgnoreCollision(_enemy.Collider2D, col.collider);
         }
 
-        public void OnCollisionStay2D(Collision2D col) {}  
-    
+        public void OnCollisionStay2D(Collision2D col) {}
+        public void OnCollisionExit2D(Collision2D col) { }
+
         private IEnumerator Timeout()
         {
             yield return new WaitForSeconds(_enemy.Settings.disabledTimeout);

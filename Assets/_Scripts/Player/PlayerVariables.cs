@@ -29,6 +29,7 @@ namespace _Scripts.Player
         public int thresholdRangeEnd;
         
         public int sinThreshold;//how much sinAccrued you have to reach in order to release a new sin
+        public int currentHealth { get; set; } = 3;
         
         public void CollectSin(int weight)
         {

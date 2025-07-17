@@ -102,6 +102,7 @@ namespace _Scripts.Enemies.Guard.State
             _currentTarget = _isMovingRight ? _rightPatrolPoint : _leftPatrolPoint;
         }
 
-       
+        public void OnCollisionExit2D(Collision2D col) { }
+
     }
 }

@@ -45,6 +45,7 @@ namespace _Scripts.Enemies.Guard.State
         }
         
         public void OnCollisionStay2D(Collision2D col) {}
+        public void OnCollisionExit2D(Collision2D col) { }
 
         private IEnumerator SearchRoutine()
         {

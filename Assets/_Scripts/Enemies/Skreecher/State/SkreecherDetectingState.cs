@@ -56,6 +56,8 @@ namespace _Scripts.Enemies.Skreecher.State
 
         public void OnCollisionStay2D(Collision2D col) {}
 
+        public void OnCollisionExit2D(Collision2D col) { }
+
         private IEnumerator DetectionTimer()
         {
             yield return new WaitForSeconds(_enemy.Settings.baseDetectionTime);

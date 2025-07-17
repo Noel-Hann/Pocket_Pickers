@@ -20,7 +20,6 @@ namespace _Scripts.Enemies.Guard.State
         private Vector2 _lastKnownPosition;
         private float _lastKnownLocationStartTime;
         private Coroutine _flipCoroutine;
-        private Coroutine _qteCoroutine;
         private Coroutine _timeAlertedBySkreecher;
         private bool _hasExecuted;
         private float _flipDelayDuration = 0.25f;
@@ -104,23 +103,20 @@ namespace _Scripts.Enemies.Guard.State
                 _enemy.Settings.FlipLocalScale();
             }
 
+            // ATTACKING ADDITION
+            if (Mathf.Abs(PlayerVariables.Instance.transform.position.x) - Mathf.Abs(_enemy.transform.position.x) <= 5f)
+            {
+                _enemy.StopMoving();
+                StartQteWithPlayer();
+                return;
+            }
+
             _enemy.Move(direction, _enemy.Settings.aggroMovementSpeed);
         }
 
         public void ExitState()
         {
             // Cleanup coroutines on exit
-            if (_qteCoroutine is not null)
-            {
-                if (PlayerStateManager.Instance.IsStunnedState())
-                    PlayerStateManager.Instance.TransitionToState(PlayerStateManager.Instance.FreeMovingState);
-
-                GameManager.Instance.quicktimeEventPanel.SetActive(false);
-                GameManager.Instance.quicktimeEventProgressPanel.SetActive(false);
-                _enemy.StopCoroutine(_qteCoroutine);
-                _qteCoroutine = null;
-            }
-
             if (_flipCoroutine is not null)
             {
                 _enemy.StopCoroutine(_flipCoroutine);
@@ -149,6 +145,8 @@ namespace _Scripts.Enemies.Guard.State
             AggroCollision(col);
         }
 
+        public void OnCollisionExit2D(Collision2D col) {}
+
         private void AggroCollision(Collision2D col)
         {
             if (((1 << col.gameObject.layer) & _enemy.playerLayer) == 0) return;
@@ -176,15 +174,13 @@ namespace _Scripts.Enemies.Guard.State
             }
             else
             {
+                // TODO: Make state trans here
                 StartQteWithPlayer();
             }
         }
 
         private void HandleCollisionFromAbove(Collision2D col)
         {
-            // Don't want to try to move the player if the coroutine is already active
-            if (_qteCoroutine != null) return;
-
             _playerWidth = col.collider.bounds.size.x;
 
             var isLeftBlocked = IsSideBlocked(Vector2.left);
@@ -284,7 +280,6 @@ namespace _Scripts.Enemies.Guard.State
             {
                 _enemy.StopMoving();
                 _movingToLastKnownPosition = false;
-                if (_qteCoroutine != null) return;
                 _enemy.TransitionToState(_enemy.SearchingState);
             }
         }
@@ -377,203 +372,7 @@ namespace _Scripts.Enemies.Guard.State
         private void StartQteWithPlayer()
         {
             // If the player is already in the QTE with this guard it shouldn't start again
-            if (_qteCoroutine != null) return;
-            // If the player is already in the QTE with a different guard this one shouldn't be able to start another
-            if (PlayerStateManager.Instance.IsStunnedState()) return;
-
-            PlayerStateManager.Instance.TransitionToState(PlayerStateManager.Instance.StunnedState);
-            _qteCoroutine = _enemy.StartCoroutine(StartQuicktimeEvent());
-        }
-
-        // Modified grapple coroutine from Don't Move
-        // TODO: Wow this needs to be its own state at this point!
-        private IEnumerator StartQuicktimeEvent()
-        {
-            _hasExecuted = false;
-            var counter = 0;
-            var timeElapsed = 0f;
-
-            GameManager.Instance.quicktimeEventPanel.SetActive(true);
-            GameManager.Instance.quicktimeEventProgressPanel.SetActive(true);
-            
-            // Reset progress meter
-            var progressMeterRect = GameManager.Instance.quicktimeEventProgressMeter.GetComponent<RectTransform>();
-            if (progressMeterRect is not null)
-            {
-                var sizeDelta = progressMeterRect.sizeDelta;
-                sizeDelta.x = 0f;
-                progressMeterRect.sizeDelta = sizeDelta;
-            }
-            
-            // Initialize time left meter
-            var timeLeftMeterRect = GameManager.Instance.quicktimeEventTimeLeftMeter.GetComponent<RectTransform>();
-            if (timeLeftMeterRect != null)
-            {
-                var sizeDelta = timeLeftMeterRect.sizeDelta;
-                sizeDelta.x = 290f;
-                timeLeftMeterRect.sizeDelta = sizeDelta;
-            }
-            
-            // Set initial color to green
-            var timeLeftMeterImage = GameManager.Instance.quicktimeEventTimeLeftMeter.GetComponent<Image>();
-            if (timeLeftMeterImage is not null)
-            {
-                timeLeftMeterImage.color = Color.green;
-            }
-            else
-            {
-                Debug.LogError("quicktimeEventTimeLeftMeter does not have an Image component.");
-            }
-
-            // Make sure the card throw arrow isn't active
-            HandleCardStanceArrow.Instance.DestroyDirectionalArrow();
-
-            var leftStickWiggleDetector = new StickWiggleDetector();
-            var rightStickWiggleDetector = new StickWiggleDetector();
-            
-            var lastLeftWiggleCount = 0;
-            var lastRightWiggleCount = 0;
-
-            try
-            {
-                while (timeElapsed < _enemy.Settings.qteTimeLimit && counter < _enemy.Settings.counterGoal)
-                {
-                    // Break out of the QTE if the enemy gets hit with a card (Probably don't need this check anymore?)
-                    if (_enemy.IsDisabledState())
-                    {
-                        PlayerStateManager.Instance.TransitionToState(PlayerStateManager.Instance.FreeMovingState);
-                        _hasExecuted = true;
-                        yield break;
-                    }
-
-                    // Break out of the QTE if the guard and player get seperated (most likely from one of them falling)
-                    if (Mathf.Abs(_enemy.transform.position.x - PlayerVariables.Instance.transform.position.x) > 2f ||
-                        Mathf.Abs(_enemy.transform.position.y - PlayerVariables.Instance.transform.position.y) > 2f)
-                    {
-                        PlayerStateManager.Instance.TransitionToState(PlayerStateManager.Instance.FreeMovingState);
-                        _hasExecuted = true;
-                        yield break;
-                    }
-
-                    // Stop any movement from the guard or player
-                    _enemy.StopMoving();
-                    
-                    // Update the stick wiggle detectors with current input
-                    leftStickWiggleDetector.Update(InputHandler.Instance.MovementInput.x);
-                    rightStickWiggleDetector.Update(InputHandler.Instance.LookInput.x);
-
-                    // Check if there are new stick wiggles
-                    var leftStickWiggled = leftStickWiggleDetector.WiggleCount > lastLeftWiggleCount;
-                    var rightStickWiggled = rightStickWiggleDetector.WiggleCount > lastRightWiggleCount;
-
-                    if (leftStickWiggled || rightStickWiggled)
-                    {
-                        // Only count one wiggle even if both sticks wiggled TODO: Fix this? It doesn't block using both sticks currently
-                        counter++;
-
-                        // Update last wiggle counts
-                        lastLeftWiggleCount = leftStickWiggleDetector.WiggleCount;
-                        lastRightWiggleCount = rightStickWiggleDetector.WiggleCount;
-
-                        // Update progress meter
-                        var progressAmount = (float)counter / _enemy.Settings.counterGoal;
-                        var newWidth = progressAmount * 290f; // 290 is the width of a full meter
-
-                        progressMeterRect = GameManager.Instance.quicktimeEventProgressMeter.GetComponent<RectTransform>();
-
-                        if (progressMeterRect != null)
-                        {
-                            var sizeDelta = progressMeterRect.sizeDelta;
-                            sizeDelta.x = newWidth;
-                            progressMeterRect.sizeDelta = sizeDelta;
-                        }
-                        else
-                        {
-                            Debug.LogError("quicktimeEventProgressMeter does not have a RectTransform component.");
-                        }
-                    }
-
-                    timeElapsed += Time.deltaTime;
-                    
-                    var timeLeftPercentage = Mathf.Clamp01((_enemy.Settings.qteTimeLimit - timeElapsed) / _enemy.Settings.qteTimeLimit);
-                    var newTimeLeftWidth = timeLeftPercentage * 290f;
-
-                    if (timeLeftMeterRect is not null)
-                    {
-                        var sizeDelta = timeLeftMeterRect.sizeDelta;
-                        sizeDelta.x = newTimeLeftWidth;
-                        timeLeftMeterRect.sizeDelta = sizeDelta;
-                    }
-
-                    Color currentColor;
-                    switch (timeLeftPercentage)
-                    {
-                        case >= 0.66f:
-                        {
-                            // Green to Yellow
-                            var t = (1f - timeLeftPercentage) / (1f - 0.66f); // t from 0 to 1
-                            currentColor = Color.Lerp(Color.green, Color.yellow, t);
-                            break;
-                        }
-                        case >= 0.33f:
-                        {
-                            // Yellow to Orange
-                            var t = (0.66f - timeLeftPercentage) / (0.66f - 0.33f); // t from 0 to 1
-                            currentColor = Color.Lerp(Color.yellow, new Color(1f, 0.5f, 0f), t);
-                            break;
-                        }
-                        default:
-                        {
-                            // Orange to Red
-                            var t = (0.33f - timeLeftPercentage) / 0.33f; // t from 0 to 1
-                            currentColor = Color.Lerp(new Color(1f, 0.5f, 0f), Color.red, t);
-                            break;
-                        }
-                    }
-
-                    if (timeLeftMeterImage is not null)
-                    {
-                        timeLeftMeterImage.color = currentColor;
-                    }
-                    else
-                    {
-                        Debug.LogError("quicktimeEventTimeLeftMeter does not have an Image component.");
-                    }
-                    
-                    yield return null;
-                }
-
-                if (_hasExecuted)
-                {
-                    PlayerStateManager.Instance.TransitionToState(PlayerStateManager.Instance.FreeMovingState);
-                    yield break;
-                }
-
-                // Quick time event succeeded
-                if (counter >= _enemy.Settings.counterGoal)
-                {
-                    PlayerStateManager.Instance.TransitionToState(PlayerStateManager.Instance.FreeMovingState);
-                    _enemy.Settings.counterGoal += 2;
-                    if (_enemy.Settings.qteTimeLimit > 2f)
-                        _enemy.Settings.qteTimeLimit -= _enemy.Settings.timeLostPerEncounter;
-
-                    CardSoundEffectManager.Instance.PlayEnemyHitClip();
-                    _enemy.TransitionToState(_enemy.StunnedState);
-                }
-                // Quick time event failed
-                else
-                {
-                    GameManager.Instance.Die();
-                }
-            }
-            finally
-            {
-                GameManager.Instance.quicktimeEventPanel.SetActive(false);
-                GameManager.Instance.quicktimeEventProgressPanel.SetActive(false);
-
-                _hasExecuted = true;
-                _qteCoroutine = null;
-            }
+            _enemy.TransitionToState(_enemy.AttackingState);
         }
 
         private IEnumerator TimeoutSkreecherAlert()
