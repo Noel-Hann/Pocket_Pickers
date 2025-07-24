@@ -12,6 +12,7 @@ namespace _Scripts.Player.State
         public void UpdateState()
         {
             PlayerMovement.Instance.HandleGravity();
+            // PlayerMovement.Instance.AlterHorizontalMovement(0.95f);
         }
 
         public void FixedUpdateState()

@@ -305,10 +305,15 @@ namespace _Scripts.Player
             
             Jumped?.Invoke();
         }
-        
+
         #endregion
 
         #region Horizontal
+
+        public void AlterHorizontalMovement(float amount)
+        {
+            _frameVelocity.x *= amount;
+        }
 
         private bool _isCrouching;
 
@@ -505,6 +510,19 @@ namespace _Scripts.Player
             return hit;
         }
         #endregion
+
+        public void ApplyDiagonalForce(bool facingRight)
+        {
+            var verticalPower = PlayerVariables.Instance.Stats.JumpPower * 0.8f;
+            var horizontalPower = PlayerVariables.Instance.Stats.MaxSpeed * 1.85f;
+
+            var diagonalForce = new Vector2(
+                facingRight ? horizontalPower : -horizontalPower,
+                verticalPower
+            );
+
+            _frameVelocity = diagonalForce;
+        }
 
 #if UNITY_EDITOR
         private void OnValidate()

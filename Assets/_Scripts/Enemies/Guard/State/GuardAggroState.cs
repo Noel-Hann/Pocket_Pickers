@@ -104,12 +104,12 @@ namespace _Scripts.Enemies.Guard.State
             }
 
             // ATTACKING ADDITION
-            if (Mathf.Abs(PlayerVariables.Instance.transform.position.x) - Mathf.Abs(_enemy.transform.position.x) <= 5f)
-            {
-                _enemy.StopMoving();
-                StartQteWithPlayer();
-                return;
-            }
+            // if (Mathf.Abs(PlayerVariables.Instance.transform.position.x) - Mathf.Abs(_enemy.transform.position.x) <= 5f)
+            // {
+            //     _enemy.StopMoving();
+            //     StartQteWithPlayer();
+            //     return;
+            // }
 
             _enemy.Move(direction, _enemy.Settings.aggroMovementSpeed);
         }
@@ -175,7 +175,7 @@ namespace _Scripts.Enemies.Guard.State
             else
             {
                 // TODO: Make state trans here
-                StartQteWithPlayer();
+                AttackPlayer();
             }
         }
 
@@ -200,7 +200,7 @@ namespace _Scripts.Enemies.Guard.State
             {
                 // Both sides blocked, proceed with QTE
                 _handlingTopCollision = false;
-                StartQteWithPlayer();
+                AttackPlayer();
             }
             else
             {
@@ -233,7 +233,7 @@ namespace _Scripts.Enemies.Guard.State
 
             // Proceed with QTE
             _handlingTopCollision = false;
-            StartQteWithPlayer();
+            AttackPlayer();
         }
 
         // If the player and the enemy are not facing each other flip one or both of them around
@@ -369,10 +369,12 @@ namespace _Scripts.Enemies.Guard.State
             return false;
         }
 
-        private void StartQteWithPlayer()
+        private void AttackPlayer()
         {
             // If the player is already in the QTE with this guard it shouldn't start again
-            _enemy.TransitionToState(_enemy.AttackingState);
+            // _enemy.TransitionToState(_enemy.AttackingState);
+            _enemy.TransitionToState(_enemy.StunnedState);
+            PlayerStateManager.Instance.HandleHitByPatroller(!_enemy.Settings.IsFacingRight());
         }
 
         private IEnumerator TimeoutSkreecherAlert()
